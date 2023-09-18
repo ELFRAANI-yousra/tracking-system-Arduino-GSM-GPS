@@ -1,0 +1,87 @@
+#include <SoftwareSerial.h>
+#include <TinyGPS++.h>
+
+SoftwareSerial gpsSerial(3,2);  //  TX ,RX
+SoftwareSerial  sim800l(5,6);  //  TX ,RX
+
+TinyGPSPlus gps;
+
+void setup() {
+  Serial.begin(9600);
+  gpsSerial.begin(9600);
+   sim800l.begin(9600);
+   sim800l.print("AT\r\n");
+  delay(1000);
+  while (sim800l.available()) {
+    Serial.write(sim800l.read());
+  }
+
+  // Set the APN (replace "your_APN_here" with your network's APN)
+ sim800l.print("AT+SAPBR=3,1,\"APN\",\"orange\"\r\n");
+  delay(3000);
+  while (sim800l.available()) {
+    Serial.write(sim800l.read());
+  }
+
+  // Enable the GPRS connection
+  sim800l.print("AT+SAPBR=1,1\r\n");
+  delay(3000);
+  while (sim800l.available()) {
+    Serial.write(sim800l.read());
+  }
+
+  // Initialize the HTTP service
+  sim800l.print("AT+HTTPINIT\r\n");
+  delay(3000);
+  while (sim800l.available()) {
+    Serial.write(sim800l.read());
+  }
+
+  //.println("AT");
+}
+
+void loop() {
+  // Switch to the GPS serial channel
+  gpsSerial.listen();
+
+  // Read GPS data
+  while (gpsSerial.available() > 0) {
+    if (gps.encode(gpsSerial.read())) {
+      if (gps.location.isUpdated()) {
+        // Get GPS coordinates
+        double latitude = gps.location.lat();
+        double longitude = gps.location.lng();
+
+        // Create Google Maps link
+        String link = "https://iotgpsproject.000webhostapp.com/gpsdata.php?lat="+String(latitude,6)+"&lng="+String(longitude,6);
+        Serial.println(link);
+
+        String lat = String(latitude, 6); // Convert latitude to a string with 6 decimal places
+        String lon =String(longitude, 6); // Convert longitude to a string with 6 decimal places
+        Serial.println(lat +","+lon );
+      
+        
+       sim800l.print("AT+HTTPPARA=\"URL\",\"http://iotgpsproject.000webhostapp.com/gpsdata.php?lat="+lat+"&lng="+lon+"\"\r\n");
+  
+  delay(3000);
+  while (sim800l.available()) {
+    Serial.write(sim800l.read());
+  }
+
+  // Execute the HTTP GET request
+  sim800l.print("AT+HTTPACTION=0\r\n");
+  delay(10000);
+  while (sim800l.available()) {
+    Serial.write(sim800l.read());
+  }
+
+  // Read the response data from the server
+  sim800l.print("AT+HTTPREAD\r\n");
+  delay(1000);
+  while (sim800l.available()) {
+    Serial.write(sim800l.read());
+  }
+      }
+    }
+  }
+}

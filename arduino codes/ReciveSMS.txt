@@ -1,0 +1,86 @@
+#include <SoftwareSerial.h>
+
+SoftwareSerial sim800l(5,6); // TX, RX
+
+void setup() {
+  Serial.begin(9600);
+  sim800l.begin(9600);
+
+  delay(1000);
+
+  Serial.println("Initializing...");
+
+  sim800l.println("AT"); // check if module is responding
+  readSerial();
+
+  sim800l.println("AT+CMGF=1"); // set SMS mode to text
+  readSerial();
+
+  sim800l.println("AT+CNMI=2,2,0,0,0"); // enable SMS notification
+  readSerial();
+
+  Serial.println("SMS Ready");
+}
+
+void loop() {
+  if (sim800l.available() > 0) {
+    String sms = sim800l.readString();
+    Serial.println(sms);
+  }
+}
+
+void readSerial() {
+  delay(500);
+  while (sim800l.available() > 0) {
+    char c = sim800l.read();
+    Serial.write(c);
+  }
+}
+
+
+
+#include <SoftwareSerial.h>
+
+SoftwareSerial sim800l(5, 6); // TX, RX
+
+void setup() {
+  Serial.begin(9600);
+  sim800l.begin(9600);
+
+  delay(1000);
+
+  Serial.println("Initializing...");
+
+  sim800l.println("AT"); // check if module is responding
+  readSerial();
+
+  sim800l.println("AT+CMGF=1"); // set SMS mode to text
+  readSerial();
+
+  sim800l.println("AT+CNMI=2,2,0,0,0"); // enable SMS notification
+  readSerial();
+
+  Serial.println("SMS Ready");
+}
+
+void loop() {
+  if (sim800l.available() > 0) {
+    String sms = sim800l.readString();
+    Serial.println(sms);
+
+    // Check if received message is "aa"
+    if (sms.indexOf("Send location") != -1) {
+      sendLink(link);
+
+      
+    }
+  }
+}
+
+void readSerial() {
+  delay(500);
+  while (sim800l.available() > 0) {
+    char c = sim800l.read();
+    Serial.write(c);
+  }
+}
